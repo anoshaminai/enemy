@@ -3,6 +3,9 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { signOut, useSession } from "next-auth/react";
 
+// local imports
+import styles from '../styles/Home.module.css'
+
 const Header = () => {
   const router = useRouter();
   function isActive(pathname: string) : boolean {
@@ -111,12 +114,15 @@ const Header = () => {
       <div className="left">
         <Link href="/">
           <a className="bold" data-active={isActive("/")}>
-            Feed
+            WHO'S HERE
           </a>
         </Link>
-        <Link href="/drafts">
-          <a data-active={isActive("/drafts")}>My drafts</a>
+        <Link href="/profile">
+          <a className="bold" data-active={isActive("/")}>
+            MY PROFILE
+          </a>
         </Link>
+
         <style jsx>{`
           .bold {
             font-weight: bold;
@@ -138,13 +144,8 @@ const Header = () => {
     right = (
       <div className="right">
         <p>
-          {session.user.name} ({session.user.email})
+          {session.user.name}
         </p>
-        <Link href="/create">
-          <button>
-            <a>New post</a>
-          </button>
-        </Link>
         <button onClick={() => signOut()}>
           <a>Log out</a>
         </button>
@@ -153,6 +154,7 @@ const Header = () => {
             text-decoration: none;
             color: #000;
             display: inline-block;
+            font-weight: bold
           }
           p {
             display: inline-block;
@@ -172,6 +174,7 @@ const Header = () => {
           }
           button {
             border: none;
+            background-color: #FD54A6;
           }
         `}</style>
       </div>

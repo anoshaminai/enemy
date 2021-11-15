@@ -18,11 +18,24 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+  profile       Profile?
 
   enemies	      User[]      @relation("enemies", onDelete: Cascade)
   isEnemy	      User[]      @relation("enemies", onDelete: Cascade)
 
   @@map("users")
+}
+
+model Profile {
+  id                String    @id @default(cuid())          
+  userId            String    @unique
+  username          String?   @unique
+  profileImage      String?
+  location          String?
+  bio               String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
 }
 
 
