@@ -39,7 +39,7 @@ export const getServerSideProps: getServerSideProps = async ({ req, res}) => {
 
 
 
-const Profile: NextPage = (props) => {
+const EditProfile: NextPage = (props) => {
 
   const { data: session, status } = useSession();
   const profile = props.profile;
@@ -49,6 +49,29 @@ const Profile: NextPage = (props) => {
   const [username, setUsername ] =  useState(props.profile.username);
   const [location, setLocation ] =  useState(props.profile.location);
   const [bio, setBio ] = useState(props.profile.bio);
+
+  const [inEditMode, setInEditMode ] = useState(false);
+
+  const submitData = async (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    try {
+      const body = { username, location, bio };
+      const res = await fetch('/api/profile', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (res.status !== 200) {
+        console.error("request error: ", res);
+      }
+
+      await Router.push('/profile');
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
 
 
   if (!session) {
@@ -66,7 +89,8 @@ const Profile: NextPage = (props) => {
 
       </main>
     </div>
-  } else {
+  }
+  else {
     return (
       <div className={styles.container}>
         <Header />
@@ -74,41 +98,57 @@ const Profile: NextPage = (props) => {
         <main className={styles.main}>
 
           <div>
-
+            <form onSubmit={submitData}>
               <p>
-                <label >username: </label>
-                <label >{username}</label>
-
+                <label for='username'>username: </label>
+                <input
+                  autoFocus
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="username"
+                  type="text"
+                  value={username}
+                />
               </p>
 
               <p>
-                <label>location: </label>
-                <label>{location} </label>
-
+                <label for='location'>location: </label>
+                <input
+                  autoFocus
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="location"
+                  type="text"
+                  value={location}
+                />
               </p>
               <p>
                 bio:
               </p>
               <p>
-                {bio}
+                <textarea
+                  cols={50}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="bio"
+                  rows={8}
+                  value={bio}
+                />
               </p>
               <p>
-                <button onClick={() => Router.push("/edit_profile")}>
-                  <a>edit</a>
+                <input type="submit" value="update" />
+                <button onClick={() => Router.push("/profile")}>
+                  <a>cancel</a>
                 </button>
-
               </p>
 
+            </form>
             </div>
 
 
         </main>
       </div>
     )
-
   }
 
 
 }
 
-export default Profile
+export default EditProfile
