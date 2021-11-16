@@ -9,7 +9,8 @@ import { useSession , getSession } from 'next-auth/react'
 // local imports
 import styles from '../styles/Home.module.css'
 import Header from "../components/Header";
-import { Profile, getProfile }  from '../lib/db_accessor'
+import { Profile }  from '../lib/db_accessor'
+import { readProfile } from './api/profile'
 
 type props = {
   profile: Profile,
@@ -17,15 +18,8 @@ type props = {
 
 export const getServerSideProps: getServerSideProps = async ({ req, res}) => {
 
-  // confirm that user is logged in
-  const session = await getSession({req});
-  if (!session) {
-    res.statusCode = 403;
-    return { props: { profile: {}, enemies: [] } };
-  }
-
   // get profile data
-  const profile = await getProfile(session.user.email);
+  const profile = await readProfile(req, res);
   return {
     props: {
       profile : profile

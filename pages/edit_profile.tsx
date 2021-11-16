@@ -9,7 +9,8 @@ import { useSession , getSession } from 'next-auth/react'
 // local imports
 import styles from '../styles/Home.module.css'
 import Header from "../components/Header";
-import { Profile, getProfile }  from '../lib/db_accessor'
+import { Profile }  from '../lib/db_accessor'
+import { readProfile } from './api/profile'
 
 type props = {
   profile: Profile,
@@ -17,18 +18,11 @@ type props = {
 
 export const getServerSideProps: getServerSideProps = async ({ req, res}) => {
 
-  // confirm that user is logged in
-  const session = await getSession({req});
-  if (!session) {
-    res.statusCode = 403;
-    return { props: { profile: {} } };
-  }
-
   // get profile data
-  const profile = await getProfile(session.user.email);
+  const profile = await readProfile(req, res);
   return {
     props: {
-      profile : profile,
+      profile : profile
     }
   }
 
@@ -95,7 +89,7 @@ const EditProfile: NextPage = (props) => {
           <div>
             <form onSubmit={submitData}>
               <p>
-                <label for='username'>username: </label>
+                <label htmlFor='username'>username: </label>
                 <input
                   autoFocus
                   onChange={(e) => setUsername(e.target.value)}
@@ -106,7 +100,7 @@ const EditProfile: NextPage = (props) => {
               </p>
 
               <p>
-                <label for='location'>location: </label>
+                <label htmlFor='location'>location: </label>
                 <input
                   autoFocus
                   onChange={(e) => setLocation(e.target.value)}
