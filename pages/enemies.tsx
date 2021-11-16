@@ -12,11 +12,10 @@ import Header from "../components/Header";
 import { Enemy, EnemyReturnData, processEnemies } from './api/enemies'
 
 
-
 type props = {
   enemies: Enemy[],
-  initialStatus: boolean[],
   allIds: string[],
+  initialStatus: boolean[],
   currEnemies: string[]
 }
 
@@ -25,7 +24,7 @@ export const getServerSideProps: getServerSideProps = async ({ req, res}) => {
 
   const processedEnemies = await processEnemies(req, res);
 
-  // construct props to maintain current state
+  // construct props needed to maintain current state
   let initialStatus : boolean[] = [];
   let currEnemies : string[] = [];
 
@@ -36,12 +35,11 @@ export const getServerSideProps: getServerSideProps = async ({ req, res}) => {
     }
   });
 
-
   return {
     props: {
       enemies: processedEnemies.allEnemies,
-      initialStatus: initialStatus,
       allIds: processedEnemies.allIds,
+      initialStatus: initialStatus,
       currEnemies: currEnemies
     }
   }
@@ -76,13 +74,11 @@ const EnemyList: NextPage = (props) => {
     // update state
     setCheckedState(updatedCheckedState);
     setCurrEnemies(updatedCurrEnemies);
-    console.error("I WAS HERE!: ");
   }
 
   const submitData = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     try {
-      console.error("CURR: ", currEnemies);
       const body = { enemies: currEnemies };
       const res = await fetch('/api/enemies', {
         method: 'POST',
@@ -100,7 +96,7 @@ const EnemyList: NextPage = (props) => {
     }
   }
 
-  console.log("ANOSHA PROPS: ", props);
+  console.log("PROPS: ", props);
 
 
   if (!session) {

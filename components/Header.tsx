@@ -19,7 +19,7 @@ const Header = () => {
     <div className="left">
       <Link href="/">
         <a className="bold" data-active={isActive("/")}>
-          Feed
+          HOME
         </a>
       </Link>
       <style jsx>{`
@@ -48,7 +48,7 @@ const Header = () => {
       <div className="left">
         <Link href="/">
           <a className="bold" data-active={isActive("/")}>
-            Feed
+            HOME
           </a>
         </Link>
         <style jsx>{`

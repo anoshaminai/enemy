@@ -19,14 +19,19 @@ export interface EnemyReturnData {
   allIds: string[]
 }
 
-
+/**
+ * Read user + enemy data from db and process it, ready for client-side
+ * callers to display
+ * @param req request
+ * @param res response
+ * @returns list of created enemy objects + list of all existing user ids
+ */
 export async function processEnemies(req: NextApiRequest, res: NextApiResponse) : EnemyReturnData {
 
   // validate authentication
   const session = await getSession({req});
   if (!session) {
-    res.status(401).json({err: "User Not Authenticated"});
-    return [];
+    return {allEnemies: [], allIds: []};
   }
 
   // fetch data
@@ -56,8 +61,14 @@ export async function processEnemies(req: NextApiRequest, res: NextApiResponse) 
 }
 
 
+/**
+ * Handle POST (& if needed, PUT) requests from client-side callers
+ * POST: writes enemy list to db
+ * @param req request
+ * @param res response
+ * @returns res with status code = 200
+ */
 export default async function handle(req: NextApiRequest, res: NextApiResponse) {
-  console.error(" I AM HERE ");
 
     if (req.method === 'POST') {
       const { enemies } = req.body;
@@ -67,8 +78,8 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
         res.status(401).json({err: "User Not Authenticated"});
       }
 
+      // to update the enemy list, we must delete what exists first
       await deleteEnemies(session.user.email);
-
       if (enemies.length > 0) {
         const newEnemies = await addEnemies(session.user.email, enemies);
       }

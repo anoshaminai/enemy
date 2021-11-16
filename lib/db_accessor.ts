@@ -1,22 +1,16 @@
 import { prisma } from '../client';
 
-// database access functions. if prisma client
-// does not find a record in the db, it will return 'null'
-// methods in this module check for that scenario and return
+// database access functions. If prisma client
+// does not find a record in the db, it will return 'null'.
+// Get methods in this module check for that scenario and return
 // empty objects instead
 
 
 export interface Profile {
-  userId?: string,
   username?: string,
   profileImage?: string,
   location?: string,
   bio?: string
-}
-
-export interface EnemyData {
-  enemies: Set<string>,
-  isEnemy: Set<string>
 }
 
 export interface User {
@@ -27,9 +21,14 @@ export interface User {
   image?: string,
   enemies: User[],
   isEnemy: User[]
-
 }
 
+export interface EnemyData {
+  enemies: Set<string>,
+  isEnemy: Set<string>
+}
+
+// get user id
 export async function getUserId(userEmail: string): string {
   const result = await prisma.user.findUnique({
     where: {
@@ -39,7 +38,7 @@ export async function getUserId(userEmail: string): string {
       id: true
     }
   })
-  return result;
+  return result ? result : '';
 }
 
 //get profile data
@@ -66,7 +65,11 @@ export async function getProfile(userEmail: string): Profile {
   }
 }
 
-//get user names
+/**
+ * Get usernames for list of user ids
+ * @param userIds set of ids to fetch data for
+ * @returns map of user id --> user name
+ */
 export async function getUsernames(userIds: string[]): Map<string, string> {
   const result = await prisma.profile.findMany({
     select: {
@@ -79,7 +82,11 @@ export async function getUsernames(userIds: string[]): Map<string, string> {
   return users;
 }
 
-//get enemies
+/**
+ * Get enemy relations of a user
+ * @param userEmail email address of user
+ * @returns set of my users + set of users i am enemy of
+ */
 export async function getEnemies(userEmail: string): EnemyData {
   const result = await prisma.user.findUnique({
     where: {
@@ -103,7 +110,10 @@ export async function getEnemies(userEmail: string): EnemyData {
   return {enemies: enemies, isEnemy: isEnemy};
 }
 
-//get all users
+/**
+ * Get all existing users
+ * @returns map of user id --> user object
+ */
 export async function getAllUsers(): Map<string, User> {
   const result = await prisma.user.findMany();
 
@@ -112,7 +122,10 @@ export async function getAllUsers(): Map<string, User> {
   return users;
 }
 
-//get online users
+/**
+ * Get online users
+ * @returns set of user ids
+ */
 export async function getAllOnline(): Set<string> {
   const result = await prisma.session.findMany({
     select: {
@@ -124,7 +137,11 @@ export async function getAllOnline(): Set<string> {
   return users;
 }
 
-//edit profile data -- all at once, or individual fields
+/**
+ * Update or create a user profile
+ * @param userEmail email of user
+ * @param profile new profile with desired fields filled in
+ */
 export async function editProfile(userEmail: string, profile: Profile): void {
   const result = await prisma.user.update({
     where: {
@@ -141,7 +158,10 @@ export async function editProfile(userEmail: string, profile: Profile): void {
   })
 }
 
-//delete enemies
+/**
+ * Delete enemies of a user.
+ * @param userEmail email of user
+ */
 export async function deleteEnemies(userEmail: string): void {
 
   const result = await prisma.user.update({
@@ -156,7 +176,12 @@ export async function deleteEnemies(userEmail: string): void {
   })
 }
 
-//add enemies (multiple at once)
+/**
+ * Add enemies for a user. Note that currently, to update an ememy list
+ you must delete the existing list via deleteEnemies
+ * @param userEmail email of user
+ * @param currEnemies list of enemy user ids
+ */
 export async function addEnemies(userEmail: string, currEnemies: string[]): void {
 
   let newEnemies = [];
