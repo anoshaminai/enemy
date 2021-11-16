@@ -9,53 +9,29 @@ import { useSession , getSession } from 'next-auth/react'
 // local imports
 import styles from '../styles/Home.module.css'
 import Header from "../components/Header";
-import { EnemyData, getEnemies, getAllUsers,
-  getAllOnline, getUserId, getUsernames }  from '../lib/db_accessor'
+import { Enemy, processEnemies } from './api/enemies'
+
 
 type props = {
-  userId: string,
-  usernames:
-  allUsers: string[],
-  onlineUsers: string[],
-  enemies: string[],
-  isEnemyOf: string[],
-
+  enemies: Enemy[],
+  initialStatus: boolean[]
 }
 
 
 export const getServerSideProps: getServerSideProps = async ({ req, res}) => {
 
-  // confirm that user is logged in
-  const session = await getSession({req});
-  if (!session) {
-    res.statusCode = 403;
-    return {
-      props: {
-        userId: null,
-        allUsers: [],
-        onlineUsers: [],
-        enemies: [],
-        isEnemyOf: []
-      }};
-  }
+  const enemies = await processEnemies(req, res);
+  let initialStatus = [];
 
-  const userId = await getUserId(session.user.email);
-  const allUsers = await getAllUsers();
-  const onlineUsers = await getAllOnline();
-  const enemies = await getEnemies(session.user.email);
+  enemies.forEach((e) => {initialStatus.push(e.isMyEnemy)});
+
   return {
     props: {
-      userId: userId,
-      allUsers : allUsers,
-      onlineUsers : onlineUsers,
-      enemies: enemies.enemies,
-      isEnemyOf: enemies.isEnemy
+      enemies: enemies,
+      initialStatus: initialStatus
     }
   }
-
 }
-
-
 
 
 
@@ -63,11 +39,46 @@ const EnemyList: NextPage = (props) => {
 
   const { data: session, status } = useSession();
 
-  console.log("PROPS: ", props);
+  const [ checkedState, setCheckedState ] = useState(props.initialStatus);
 
-  // const [username, setUsername ] =  useState(props.profile.username);
-  // const [location, setLocation ] =  useState(props.profile.location);
-  // const [bio, setBio ] = useState(props.profile.bio);
+
+  const handleOnChange = (position) => {
+    const updatedCheckedState = checkedState.map((item, index) =>
+      index === position ? !item : item
+    );
+
+    setCheckedState(updatedCheckedState);
+    console.error("I WAS HERE!");
+  }
+
+  const submitData = async (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    try {
+      let currEnemies : Users[] = [];
+      props.enemies.forEach((e, ind) => {
+        if (checkedState[ind]) {
+          currEnemies.push(e.userData);
+        }
+      })
+      console.error("CURR: ", currEnemies);
+      const body = { enemies: currEnemies };
+      const res = await fetch('/api/enemies', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (res.status !== 200) {
+        console.error("request error: ", res);
+      }
+
+      await Router.push('/enemies');
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  console.log("ANOSHA PROPS: ", props);
 
 
   if (!session) {
@@ -94,25 +105,29 @@ const EnemyList: NextPage = (props) => {
 
           <div>
 
-              <p>
-                <label >username: </label>
-                <label >ha</label>
+              <ul className="enemies-list">
+                {props.enemies.map((e: Enemy, index) => {
+                  return (
+                    <li key={index}>
+                      <div className="left-section">
+                      <input
+                        type="checkbox"
+                        id={`custom-checkbox-${index}`}
+                        name={e.username}
+                        value={e.username}
+                        defaultChecked={checkedState[index]}
+                        onChange={() => handleOnChange(index)}
+                      />
+                      <label htmlFor={`custom-checkbox-${index}`}>{e.username}</label>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
 
-              </p>
 
               <p>
-                <label>location: </label>
-                <label>ha </label>
-
-              </p>
-              <p>
-                bio:
-              </p>
-              <p>
-                ha
-              </p>
-              <p>
-                <button onClick={() => Router.push("/edit_enemies")}>
+                <button onClick={submitData}>
                   <a>make enemies</a>
                 </button>
 
