@@ -7,6 +7,7 @@ import { prisma } from '../client';
 
 
 export interface Profile {
+  userId?: string,
   username?: string,
   profileImage?: string,
   location?: string,
@@ -14,8 +15,31 @@ export interface Profile {
 }
 
 export interface EnemyData {
-  enemies: string[],
-  isEnemy: string[]
+  enemies: Set<string>,
+  isEnemy: Set<string>
+}
+
+export interface User {
+  id: string,
+  name?: string,
+  email?: string,
+  emailVerified?: DateTime,
+  image?: string,
+  enemies: User[],
+  isEnemy: User[]
+
+}
+
+export async function getUserId(userEmail: string): string {
+  const result = await prisma.user.findUnique({
+    where: {
+      email: userEmail
+    },
+    select: {
+      id: true
+    }
+  })
+  return result;
 }
 
 //get profile data
@@ -42,6 +66,19 @@ export async function getProfile(userEmail: string): Profile {
   }
 }
 
+//get user names
+export async function getUsernames(userIds: string[]): Map<string, string> {
+  const result = await prisma.profile.findMany({
+    select: {
+      userId: true,
+      username: true
+    }
+  });
+  let users = new Map<string, string>();
+  result.forEach((v) => {users.set(v.userId, v.username)})
+  return users;
+}
+
 //get enemies
 export async function getEnemies(userEmail: string): EnemyData {
   const result = await prisma.user.findUnique({
@@ -53,29 +90,38 @@ export async function getEnemies(userEmail: string): EnemyData {
       isEnemy: true
     }
   })
-  let enemies = result ? result : {enemies: [], isEnemy: []}
-  return result
+
+  let enemies = new Set();
+  let isEnemy = new Set();
+
+  if (result && result.enemies) {
+    result.enemies.forEach((v) => {enemies.add(v.id)});
+  }
+  if (result && result.isEnemy) {
+    result.enemies.forEach((v) => {isEnemy.add(v.id)});
+  }
+  return {enemies: enemies, isEnemy: isEnemy};
 }
 
 //get all users
-export async function getAllUsers(): string[] {
-  const result = await prisma.user.findMany({
-    select: {
-      id: true,
-    },
-  })
-  return result
+export async function getAllUsers(): Map<string, User> {
+  const result = await prisma.user.findMany();
+
+  let users = new Map<string, User>();
+  result.forEach((v) => {users.set(v.id, v)})
+  return users;
 }
 
 //get online users
-export async function getAllOnline(): string[] {
-  const result = await prisma.sessions.findMany({
+export async function getAllOnline(): Set<string> {
+  const result = await prisma.session.findMany({
     select: {
       userId: true
-    },
-    distinct: ['userId']
+    }
   })
-  return result
+  let users = new Set<string>();
+  result.forEach((v) => {users.add(v.userId)})
+  return users;
 }
 
 //edit profile data -- all at once, or individual fields
@@ -96,16 +142,18 @@ export async function editProfile(userEmail: string, profile: Profile): void {
 }
 
 //edit enemies (multiple at once)
-export async function editEnemies(userEmail: string, enemies: string[]): void {
-  const result = await prisma.user.upsert({
+export async function editEnemies(userEmail: string, enemies: User[]): void {
+  let connection = [];
+  enemies.forEach((e) => {connection.push({id: e.id})});
+
+  const result = await prisma.user.update({
     where: {
       email: userEmail
     },
-    update: {
-      enemies: enemies
-    },
-    create: {
-      enemies: enemies
+    data: {
+      enemies: {
+        connect: connection
+      }
     }
   })
 }

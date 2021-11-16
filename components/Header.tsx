@@ -112,7 +112,7 @@ const Header = () => {
   if (session) {
     left = (
       <div className="left">
-        <Link href="/">
+        <Link href="/enemies">
           <a className="bold" data-active={isActive("/")}>
             WHO'S HERE
           </a>
