@@ -9,26 +9,40 @@ import { useSession , getSession } from 'next-auth/react'
 // local imports
 import styles from '../styles/Home.module.css'
 import Header from "../components/Header";
-import { Enemy, processEnemies } from './api/enemies'
+import { Enemy, EnemyReturnData, processEnemies } from './api/enemies'
+
 
 
 type props = {
   enemies: Enemy[],
-  initialStatus: boolean[]
+  initialStatus: boolean[],
+  allIds: string[],
+  currEnemies: string[]
 }
 
 
 export const getServerSideProps: getServerSideProps = async ({ req, res}) => {
 
-  const enemies = await processEnemies(req, res);
-  let initialStatus = [];
+  const processedEnemies = await processEnemies(req, res);
 
-  enemies.forEach((e) => {initialStatus.push(e.isMyEnemy)});
+  // construct props to maintain current state
+  let initialStatus : boolean[] = [];
+  let currEnemies : string[] = [];
+
+  processedEnemies.allEnemies.forEach((e) => {
+    initialStatus.push(e.isMyEnemy);
+    if (e.isMyEnemy) {
+      currEnemies.push(e.userData.id);
+    }
+  });
+
 
   return {
     props: {
-      enemies: enemies,
-      initialStatus: initialStatus
+      enemies: processedEnemies.allEnemies,
+      initialStatus: initialStatus,
+      allIds: processedEnemies.allIds,
+      currEnemies: currEnemies
     }
   }
 }
@@ -38,28 +52,36 @@ export const getServerSideProps: getServerSideProps = async ({ req, res}) => {
 const EnemyList: NextPage = (props) => {
 
   const { data: session, status } = useSession();
-
   const [ checkedState, setCheckedState ] = useState(props.initialStatus);
+  const [ currEnemies, setCurrEnemies ] = useState(props.currEnemies);
 
-
+  // update checked state + current enemy list when a checkbox status changes
   const handleOnChange = (position) => {
     const updatedCheckedState = checkedState.map((item, index) =>
       index === position ? !item : item
     );
+    const updatedCurrEnemies = currEnemies;
 
+    if (!updatedCheckedState[position]) {
+      // delete if box was unchecked
+      const ind = updatedCurrEnemies.indexOf(props.allIds[position]);
+      if (ind > -1) {
+          updatedCurrEnemies.splice(ind, 1);
+      }
+    } else {
+      // add if box was checked
+      updatedCurrEnemies.push(props.allIds[position]);
+    }
+
+    // update state
     setCheckedState(updatedCheckedState);
-    console.error("I WAS HERE!");
+    setCurrEnemies(updatedCurrEnemies);
+    console.error("I WAS HERE!: ");
   }
 
   const submitData = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     try {
-      let currEnemies : Users[] = [];
-      props.enemies.forEach((e, ind) => {
-        if (checkedState[ind]) {
-          currEnemies.push(e.userData);
-        }
-      })
       console.error("CURR: ", currEnemies);
       const body = { enemies: currEnemies };
       const res = await fetch('/api/enemies', {
@@ -114,7 +136,7 @@ const EnemyList: NextPage = (props) => {
                         type="checkbox"
                         id={`custom-checkbox-${index}`}
                         name={e.username}
-                        value={e.username}
+                        value={e.email}
                         defaultChecked={checkedState[index]}
                         onChange={() => handleOnChange(index)}
                       />

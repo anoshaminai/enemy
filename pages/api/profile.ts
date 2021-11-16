@@ -9,7 +9,7 @@ export default async function handle(req, res) {
     const { username, location, bio } = req.body;
     //
     const session = await getSession({req});
-    console.log("Sess ", session.user.email);
+
     const newProfile = await editProfile(session.user.email, {
       username: username,
       location: location,

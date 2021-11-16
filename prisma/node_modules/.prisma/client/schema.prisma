@@ -20,14 +20,14 @@ model User {
   sessions      Session[]
   profile       Profile?
 
-  enemies	      User[]      @relation("enemies", onDelete: Cascade)
-  isEnemy	      User[]      @relation("enemies", onDelete: Cascade)
+  enemies	    User[]      @relation("enemies", references: [id], onDelete: Cascade)
+  isEnemy	    User[]      @relation("enemies", references: [id], onDelete: Cascade)
 
   @@map("users")
 }
 
 model Profile {
-  id                String    @id @default(cuid())          
+  id                String    @id @default(cuid())
   userId            String    @unique
   username          String?   @unique
   profileImage      String?

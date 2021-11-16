@@ -9,11 +9,10 @@ import { useSession , getSession } from 'next-auth/react'
 // local imports
 import styles from '../styles/Home.module.css'
 import Header from "../components/Header";
-import { Profile, getProfile, getEnemies }  from '../lib/db_accessor'
+import { Profile, getProfile }  from '../lib/db_accessor'
 
 type props = {
   profile: Profile,
-  enemies: string[]
 }
 
 export const getServerSideProps: getServerSideProps = async ({ req, res}) => {
@@ -22,16 +21,14 @@ export const getServerSideProps: getServerSideProps = async ({ req, res}) => {
   const session = await getSession({req});
   if (!session) {
     res.statusCode = 403;
-    return { props: { profile: {}, enemies: [] } };
+    return { props: { profile: {} } };
   }
 
   // get profile data
   const profile = await getProfile(session.user.email);
-  const enemies = await getEnemies(session.user.email);
   return {
     props: {
       profile : profile,
-      enemies: enemies
     }
   }
 
