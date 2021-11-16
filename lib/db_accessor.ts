@@ -141,10 +141,8 @@ export async function editProfile(userEmail: string, profile: Profile): void {
   })
 }
 
-//edit enemies (multiple at once)
-export async function editEnemies(userEmail: string, enemies: User[]): void {
-  let connection = [];
-  enemies.forEach((e) => {connection.push({id: e.id})});
+//delete enemies
+export async function deleteEnemies(userEmail: string): void {
 
   const result = await prisma.user.update({
     where: {
@@ -152,7 +150,30 @@ export async function editEnemies(userEmail: string, enemies: User[]): void {
     },
     data: {
       enemies: {
-        connect: connection
+        set: [],
+      }
+    }
+  })
+}
+
+//add enemies (multiple at once)
+export async function addEnemies(userEmail: string, currEnemies: string[]): void {
+
+  let newEnemies = [];
+  currEnemies.forEach((e, ind) => {
+    newEnemies.push({
+      where: { id: e },
+      create: { id: e },
+    });
+  });
+
+  const result = await prisma.user.update({
+    where: {
+      email: userEmail
+    },
+    data: {
+      enemies: {
+        connectOrCreate: newEnemies,
       }
     }
   })
