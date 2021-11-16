@@ -42,8 +42,6 @@ export const getServerSideProps: getServerSideProps = async ({ req, res}) => {
 const EditProfile: NextPage = (props) => {
 
   const { data: session, status } = useSession();
-  const profile = props.profile;
-  const enemies = props.enemies;
   console.log("PROPS: ", props);
 
   const [username, setUsername ] =  useState(props.profile.username);

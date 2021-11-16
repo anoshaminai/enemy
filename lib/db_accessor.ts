@@ -7,6 +7,7 @@ import { prisma } from '../client';
 
 
 export interface Profile {
+  userId? : string,
   username?: string,
   profileImage?: string,
   location?: string,
@@ -16,6 +17,18 @@ export interface Profile {
 export interface EnemyData {
   enemies: string[],
   isEnemy: string[]
+}
+
+export async function getUserId(userEmail: string): string {
+  const result = await prisma.user.findUnique({
+    where: {
+      email: userEmail
+    },
+    select: {
+      id: true
+    }
+  })
+  return result;
 }
 
 //get profile data
@@ -42,6 +55,17 @@ export async function getProfile(userEmail: string): Profile {
   }
 }
 
+//get user names
+export async function getUsernames(userIds: string[]): Profile {
+  const result = await prisma.profile.findMany({
+    select: {
+      userId: true,
+      username: true
+    }
+  })
+  return result;
+}
+
 //get enemies
 export async function getEnemies(userEmail: string): EnemyData {
   const result = await prisma.user.findUnique({
@@ -59,21 +83,16 @@ export async function getEnemies(userEmail: string): EnemyData {
 
 //get all users
 export async function getAllUsers(): string[] {
-  const result = await prisma.user.findMany({
-    select: {
-      id: true,
-    },
-  })
+  const result = await prisma.user.findMany();
   return result
 }
 
 //get online users
 export async function getAllOnline(): string[] {
-  const result = await prisma.sessions.findMany({
+  const result = await prisma.session.findMany({
     select: {
-      userId: true
-    },
-    distinct: ['userId']
+      id: true
+    }
   })
   return result
 }

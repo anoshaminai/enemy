@@ -9,12 +9,19 @@ import { useSession , getSession } from 'next-auth/react'
 // local imports
 import styles from '../styles/Home.module.css'
 import Header from "../components/Header";
-import { Profile, getProfile, getEnemies }  from '../lib/db_accessor'
+import { EnemyData, getEnemies, getAllUsers,
+  getAllOnline, getUserId, getUsernames }  from '../lib/db_accessor'
 
 type props = {
-  profile: Profile,
-  enemies: string[]
+  userId: string,
+  usernames:
+  allUsers: string[],
+  onlineUsers: string[],
+  enemies: string[],
+  isEnemyOf: string[],
+
 }
+
 
 export const getServerSideProps: getServerSideProps = async ({ req, res}) => {
 
@@ -22,16 +29,27 @@ export const getServerSideProps: getServerSideProps = async ({ req, res}) => {
   const session = await getSession({req});
   if (!session) {
     res.statusCode = 403;
-    return { props: { profile: {}, enemies: [] } };
+    return {
+      props: {
+        userId: null,
+        allUsers: [],
+        onlineUsers: [],
+        enemies: [],
+        isEnemyOf: []
+      }};
   }
 
-  // get profile data
-  const profile = await getProfile(session.user.email);
+  const userId = await getUserId(session.user.email);
+  const allUsers = await getAllUsers();
+  const onlineUsers = await getAllOnline();
   const enemies = await getEnemies(session.user.email);
   return {
     props: {
-      profile : profile,
-      enemies: enemies
+      userId: userId,
+      allUsers : allUsers,
+      onlineUsers : onlineUsers,
+      enemies: enemies.enemies,
+      isEnemyOf: enemies.isEnemy
     }
   }
 
@@ -39,15 +57,17 @@ export const getServerSideProps: getServerSideProps = async ({ req, res}) => {
 
 
 
-const Profile: NextPage = (props) => {
+
+
+const EnemyList: NextPage = (props) => {
 
   const { data: session, status } = useSession();
 
   console.log("PROPS: ", props);
 
-  const [username, setUsername ] =  useState(props.profile.username);
-  const [location, setLocation ] =  useState(props.profile.location);
-  const [bio, setBio ] = useState(props.profile.bio);
+  // const [username, setUsername ] =  useState(props.profile.username);
+  // const [location, setLocation ] =  useState(props.profile.location);
+  // const [bio, setBio ] = useState(props.profile.bio);
 
 
   if (!session) {
@@ -76,24 +96,24 @@ const Profile: NextPage = (props) => {
 
               <p>
                 <label >username: </label>
-                <label >{username}</label>
+                <label >ha</label>
 
               </p>
 
               <p>
                 <label>location: </label>
-                <label>{location} </label>
+                <label>ha </label>
 
               </p>
               <p>
                 bio:
               </p>
               <p>
-                {bio}
+                ha
               </p>
               <p>
-                <button onClick={() => Router.push("/edit_profile")}>
-                  <a>edit</a>
+                <button onClick={() => Router.push("/edit_enemies")}>
+                  <a>make enemies</a>
                 </button>
 
               </p>
@@ -110,4 +130,4 @@ const Profile: NextPage = (props) => {
 
 }
 
-export default Profile
+export default EnemyList
